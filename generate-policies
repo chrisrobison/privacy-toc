@@ -1,0 +1,40 @@
+#!/usr/bin/php
+<?php
+    $exe = array_shift($argv);
+    $doms = array();
+
+    while ($arg = array_shift($argv)) {
+        if (preg_match("/^\-(\w+)/", $arg, $matches)) {
+            $opt[$matches[1]] = array_shift($argv);
+
+            if (($matches[1] == 'h') || ($matches[1] == '?')) {
+                print "$exe - Generates cookie and privacy policies and term of service for websites.\n\nUsage: ./generate-policies [-?hno] [-t [all|privacy|cookie|tos]] DOMAIN [DOMAIN...]\n\t-h  -  Display help\n\t-n  -  Do not create directories\n\t-o  -  Output to stdout\n\t-t  -  all | privacy | cookie | tos\n\n";
+                exit;
+            }
+        } else {
+            $doms[] = $arg;
+        }
+    }
+
+    foreach ($doms as $dom) {
+
+        if (!file_exists($dom)) {
+            mkdir($dom, 0755);
+        }
+
+        $privacy = generate("privacy", $dom);
+        $tos = generate("tos", $dom);
+        $cookie = generate("cookie-policy", $dom);
+
+        print "Generated $dom policies in ./$dom/\n";
+    }
+
+function generate($type, $dom) {
+    if (file_exists($type.'.html')) {
+        $txt = file_get_contents("$type.html");
+        $txt = preg_replace("/<\%DOMAIN\%>/", $dom, $txt);
+        file_put_contents("$dom/$type.html", $txt);
+    }
+    return $txt;
+}
+?>
